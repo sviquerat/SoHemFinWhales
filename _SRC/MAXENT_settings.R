@@ -14,11 +14,3 @@ file.copy(MAXENT_FILE, system.file("java", package="dismo"),overwrite = T)
 MAXENTargs = c("jackknife=false","replicates=100","writeplotdata=false","writebackgroundpredictions=false", 
                'plots=false', 'replicatetype=Bootstrap')
 MAXENT_sensitivity = .9
-
-#### MaxEnt directories ####
-MAXENTGFX<-file.path(MAXENTDIR,'GFX')
-MAXENTMODELGFX<-file.path(MAXENTGFX,'MODEL_DIAGNOSTICS')
-
-dir.create(MAXENTMODELGFX,recursive=T, showWarnings = F)
-dir.create(MAXENTGFX,recursive=T, showWarnings = F)
-

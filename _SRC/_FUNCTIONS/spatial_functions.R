@@ -15,10 +15,10 @@ polyColourPlot<-function(SPPDF,columnName,myColorRampPalette = colorRampPalette(
   return(out)
 }
 
-points2polygons <- function(SPpoints,name) {
+points2polygons <- function(SPpoints,name, proj4string) {
   p<-Polygon(LL@coords)
   p<-Polygons(list(p),name)
-  p<-SpatialPolygons(list(p),proj4string = ANT_POL_STEREO)
+  p<-SpatialPolygons(list(p),proj4string = proj4string)
   data<-data.frame(Name=name)
   row.names(data)<-names(p)
   p<-SpatialPolygonsDataFrame(p, data)
