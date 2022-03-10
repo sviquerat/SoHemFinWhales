@@ -1,7 +1,7 @@
 #### ensure required packages are available ####
 
 .requiredPackages<-c('ape','devtools','dismo','rJava', "tree","randomForest", "fmsb","sp","raster","rgdal",
-                    'pROC','separationplot','reshape','ggplot2','MASS','rasterVis',"ggnewscale","GGally",
+                    'pROC','pracma','separationplot','reshape','ggplot2','MASS','rasterVis',"ggnewscale","GGally",
 					"ggpubr","gridExtra","reshape2","ggridges","dplyr","scales","Hmisc","RandomForestsGLS")
 
 for (pkg in .requiredPackages){
@@ -11,10 +11,8 @@ for (pkg in .requiredPackages){
   }
 }
 
-#obsolete
-# if (! ("randomForestExplainer" %in% installed.packages()) ) {
-  # devtools::install_github("MI2DataLab/randomForestExplainer")
-# }
+#obsolete?
+#separationplot
 
 getCitation<-function(BIB=F){
   out<-list()

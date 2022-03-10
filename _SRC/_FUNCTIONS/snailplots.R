@@ -1,88 +1,81 @@
-range01 <- function(x){
-  return((x-min(x))/(max(x)-min(x)))
+polar_coordinates<-function(r,angle,IS_DEG=T){
+  theta<-angle
+  if (IS_DEG){
+    theta<-angle*(2*pi)/360
+  }
+  out<-data.frame(l=rep(r,length(angle)),theta=theta,x=NA,y=NA)
+  for (th in theta){
+    out$x[out$theta==th & out$l == r]<-r*cos(th)
+    out$y[out$theta==th & out$l == r]<-r*sin(th) 
+  }
+  return(out)
 }
 
-inv_range01 <- function(scaled_x,max_x,min_x=0){
-  return( scaled_x*(max_x-min_x) + min_x )
-}
-
-polarcoordinate<-function(input,phi,SCALE=T){
-  value<-input
-  rad <- phi * pi /180
-  if (SCALE) {value<-range01(value)}
-  x<-value*cos(rad)
-  y<-value*sin(rad)
-  return(list(x=x,y=y,degs=phi,rad=rad,radii=value,input=input))
-}
-
-plotCircle<-function(radii=seq(0,.75,.25),angularres=5,...){
-  phi<-seq(0,360,angularres)
-  for (r in radii){
-    polygon(polarcoordinate(r,phi,SCALE=F),...)
+draw_circular_grid<-function(grid_radii=seq(0,1,.25),grid_angles=seq(0,360,45),grid_spike_length=20*max(grid_radii),...){
+  for (r in grid_radii){
+    plotrix::draw.circle(0,0,r,...)
+  }
+  grid<-polar_coordinates(grid_spike_length,grid_angles,...)
+  for (spike in 1:nrow(grid)){
+    lines(c(0,grid$y[spike])~c(0,grid$x[spike]),...)
   }
 }
 
-addLabels<-function(radii=seq(.25,.75,.25),angle=c(90,180),labels=NULL,...){
-  for (r in radii){
-    text(polarcoordinate(r,angle,SCALE=F),labels=r,...)
+draw_snail<-function(y,type='p',col=adjustcolor('grey',.75),pch=16,color_ramp = NULL,...){
+  polar<-create_snail_data(y)
+  if (is.null(color_ramp)){
+    colors=rep(col,nrow(polar))
+  }
+  else{
+    colors=color_ramp(nrow(polar))
+  }
+  
+  if(type=='p'){
+    for (i in 1:nrow(polar)){
+      points(polar$y[i]~polar$x[i],pch=pch,col=colors[i])
+    }
+  }
+  if(type=='l'){ #line plot
+    for (i in 1:nrow(polar)){
+      lines(c(0,polar$y[i])~c(0,polar$x[i]),col=colors[i])
+    }
+  }
+  if(type=='o'){ #outline only
+    lines(c(0,polar$y)~c(0,polar$x),col=col)
+  }
+  if(type=='poly'){ #polygon
+    polygon(x=c(0,polar$x),y=c(0,polar$y),col=col,border=NA)
   }
 }
 
-addreCastLabels<-function(radii=seq(.25,.75,.25),angle=c(90,180),labels=NULL,...){
-  for (i in 1:length(radii)){
-    r<-radii[i]
-    label<-labels[i]
-    text(polarcoordinate(r,angle,SCALE=F),labels=label,...)
-  }
-}
-
-
-plotCoordinateSystem<-function(){
-  plotCircle(col=adjustcolor('blue',alpha=.2),border=NA)
-  plotCircle(1)
-  plotDiagonals(lty=2)
-}
-
-plotDiagonals<-function(...){
-  plotLine(225,45,...)
-  plotLine(135,315,...)
-}
-
-plotInternal<-function(...){
-  plotLine(180,0,...)
-  plotLine(270,90,...)
-}
-
-plotLine<-function(angle1,angle2,...){
-  lines(polarcoordinate(1,c(angle1,angle2),SCALE=F),...)
-}
-
-snailPlot<-function(y,r=max(y),...){
+create_snail_data<-function(y){
   y<-y[!is.na(y)]
-  y<-sort(y)
-  res<-360 / length(y) 
-  degs<-res*seq(1,length(y),1)
-  coords<-polarcoordinate(y,degs)
-  par(xaxs='i',yaxs='i'); ## "internal" axis spacing, meaning no extended range, and slightly adjust margins
-  plot(NA,xlim=c(-1,1),ylim=c(-1,1),pch=4,asp=1,ann=F,...)
-  plotCoordinateSystem()
-  polygon(c(0,coords$x),c(0,coords$y),border=NA,col=adjustcolor('orange',alpha=.8))
-  plotInternal(col='red',lty=2,lwd=1.5)
-  addLabels()
-  castFromTo(coords$radii,coords$input)
-  totalArea<-sum(rep(1,length(coords$radii)))
-  coveredArea<-totalArea-sum(coords$radii)
-  axis(1)
-  title(sub=paste0(round(coveredArea/totalArea,2)*100,'% covered'))
+  step_size<-2*pi/length(y)
+  theta<-seq(0,2*pi,step_size)
+  theta<-theta[1:(length(theta)-1)]
+  polar<-data.frame(ID=1:length(y), theta=NA, r=y)
+  polar<-polar[order(-polar$r),]
+  polar$theta<-theta
+  df<-data.frame()
+  for (i in 1:nrow(polar)){
+    newline<-cbind(polar[i,],polar_coordinates(polar$r[i],polar$theta[i], IS_DEG=F))
+    df<-rbind(df,newline)
+  }
+  return(df)
 }
 
-hillPlot<-function(y,r=max(y)){
-  y<-y[!is.na(y)]
-  y<-sort(y)
-  y_<-range01(y)
-  plot(y_,ylim=c(0,1),ann=F,type='n')
-  polygon(c(1:length(y_),rev(1:length(y))),c(y_,rep(0,length(y_))),border=NA,col=adjustcolor('orange',alpha=.8))
-  totalArea<-length(y_)
-  coveredArea<-totalArea-sum(y_)
-  title(sub=paste0(round(coveredArea/totalArea,2)*100,'% covered'))
+polar_area<-function(x,y, comp_radius=1){
+  area<-pracma::polyarea(x,y)
+  area_comp<-pi*comp_radius
+  return(
+    list(ratio=area/area_comp,area_data=area, area_comparison=area_comp, comparison_radius = comp_radius)
+  )
+}
+
+snailplot<-function(y,type='poly',scale_y=1,grid_radii=quantile(y,na.rm=T)){
+  par(pty="s")
+  range<-max(y,na.rm=T)*scale_y
+  plot(1,1,type='n',ann=F, xlim=c(-range,range),ylim=c(-range,range))
+  draw_circular_grid(grid_radii=grid_radii)
+  draw_snail(y, type=type)
 }

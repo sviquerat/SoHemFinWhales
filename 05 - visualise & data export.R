@@ -22,8 +22,6 @@ names(df)<-gsub('_pretty','',names(df))
 #combine with model definitions
 openxlsx::write.xlsx(df, file.path(PUBDIR,paste0('TABLE_5_',basename(file))))
 
-file.copy(file, file.path(),overwrite = T)
-
 file<-file.path(MAXENTDIR,'SORP_MAXENT_MODEL_RESULTS_REPLICATES.xlsx')
 file.copy(file, file.path(SUPPDIR,paste0('SUPP_',basename(file))),overwrite = T)
 
@@ -90,7 +88,7 @@ records_table$A[records_table$A=='']<-'-'
 records_table<-rbind(records_table,data.frame(dataSource='Total',Type_of_data='', N=sum(records_table$N), I=sum(records_table$I), A=''))
 openxlsx::write.xlsx(records_table,file.path(PUBDIR,'TABLE_1_SORP_SUMMARY_RECORDS.xlsx'))
 
-df<-data.frame(dataSource=records_table[1:(nrow(records_table)-1),1], source = '')
+df<-data.frame(dataSource=records_table[1:(nrow(records_table)-1),1], years='', source = '')
 openxlsx::write.xlsx(df,file.path(SUPPDIR,'SUPP_DATA_REFERENCES.xlsx'))
 
 #### sample data prep ####
@@ -172,6 +170,7 @@ png(file.path(PUBDIR,'FIG_3_SORP_SUMMARY_YEAR.png'),12000,6000,res=600)
 print(p)
 dev.off()
 
+#RF DIAGS?
 
 #### NEXT #####
 

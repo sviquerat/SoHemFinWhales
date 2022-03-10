@@ -2,8 +2,6 @@ source('_SRC/SORP_settings.R')
 source(file.path(SCRIPTDIR,'RF_settings.R'))
 
 load(SAMPLEGRID)
-#load(PRED_GRID)
-#load(COVAR_STACKS)
 load(FINAL_COVARS)
 
 data.rf <- sample_grid
@@ -14,19 +12,19 @@ data.GLS<-data.rf[,c('cell_x','cell_y','I', 'quart',analysis_cols)] # create sma
 data.GLS<-subset(data.GLS, I > 0)
 
 RF_models<-list() # list that will hold all models
-for (q in analysis_quarts){
+for (quarter in analysis_quarts){
   
-  data<-subset(data.GLS, quart==quart)
-  covCols<-analysis_covars[[q]]
+  data<-subset(data.GLS, quart==quarter)
+  covCols<-analysis_covars[[quarter]]
   RFGLS_mtry=ceiling(length(covCols)/2) # consider half of all available covariates for one tree of the forest
-  
-  print(paste0('Quartile : ',q))
-  print(paste0('covars : ',paste0(covCols,collapse=', ')))
-  print(paste0('RF tries : ',RFGLS_mtry))
   
   data<-data[,c('cell_x','cell_y','I', covCols)]
   data<-data[complete.cases(data[,c('cell_x','cell_y','I', covCols)]),]
   
+  print(paste0('Quartile : ',quarter))
+  print(paste0('Cells : ',nrow(data)))
+  print(paste0('covars : ',paste0(covCols,collapse=', ')))
+  print(paste0('RF tries : ',RFGLS_mtry))
   
   # creation of data for RFGLS
   coords<-as.matrix(data[,c('cell_x','cell_y')])
@@ -40,15 +38,13 @@ for (q in analysis_quarts){
   # We're using scaled covariates in the RFGLS model - however, when predicting, we need to know the full range of covariates 
   # from the pred grid and scale each quarterly subset using the centers and scales of the full range of possible values.
   for (col in colnames(X)){
-    idx<-which(colnames(X) ==col)
-    X[,idx]<-scale_manual(X[,idx],pred_centers[[q]][col],pred_scales[[q]][col])
+    idx<-which(colnames(X)==col)
+    X[,idx]<-scale_manual(X[,idx],pred_centers[[quarter]][col],pred_scales[[quarter]][col])
   }
-  
   # run the model
-  model <- RFGLS_estimate_spatial(coords, y, X, mtry=RFGLS_mtry, h=RFGLS_ncores, n_omp=RFGLS_n_omp,cov.model = "matern",
-                                  ntree=RFGLS_ntrees, n.neighbors=RFGLS_n.neighbors,nrnodes=RFGLS_nrnodes,
+  model <- RFGLS_estimate_spatial(coords, y, X, mtry=RFGLS_mtry, h=RFGLS_ncores, n_omp=RFGLS_n_omp, cov.model = "matern",
+                                  ntree=RFGLS_ntrees, n.neighbors=RFGLS_n.neighbors, nrnodes=RFGLS_nrnodes,
                                   search.type = RFGLS_search.type, param_estimate = TRUE,verbose=T)
-  
-  RF_models[[q]]<-list(model=model, data=data, centers = pred_centers[[q]], scales = pred_scales[[q]], covars=covCols)
+  RF_models[[quarter]]<-list(model=model, data=data, centers = pred_centers[[quarter]], scales = pred_scales[[quarter]], covars=covCols)
 }
 save(RF_models,data.GLS,scale_manual,file = RFGLS_MODELS,compress='gzip')

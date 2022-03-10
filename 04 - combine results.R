@@ -78,12 +78,11 @@ for (aoi in unique(area_results$area)){
   }
 }
 
-p<-ggplot2::ggplot(data=summary_areas, aes(x=area,y=N,fill = area))
-p<-p+geom_bar(stat='identity')
-p<-p + geom_crossbar(aes(ymin = N_5, ymax = N_95), width = 0.2)
-p<-p+facet_wrap(.~quarter)
-p
-
+# p<-ggplot2::ggplot(data=summary_areas, aes(x=area,y=N,fill = area))
+# p<-p+geom_bar(stat='identity')
+# p<-p + geom_crossbar(aes(ymin = N_5, ymax = N_95), width = 0.2)
+# p<-p+facet_wrap(.~quarter)
+# p
 
 pretty_summary<-data.frame(areas=summary_areas$area)
 pretty_summary$name<-abbreviate(pretty_summary$area,2)
