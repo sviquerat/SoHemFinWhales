@@ -16,12 +16,8 @@ RFGLS_nrnodes=20 # maximum number of nodes allowed per tree
 
 #### RFGLS directories ####
 RFDIR<-file.path(RESDIR,'RF')
-# RFDATDIR<-file.path(RFDIR,'DATA')
 RFGFX<-file.path(RFDIR,'GFX')
-# RFSHPDIR<-file.path(RFDIR,'SPATIAL')
 RFMODELGFX<-file.path(RFGFX,'MODEL_DIAGNOSTICS')
 
 dir.create(RFMODELGFX,recursive=T, showWarnings = F)
 dir.create(RFGFX,recursive=T, showWarnings = F)
-# dir.create(RFSHPDIR,recursive=T, showWarnings = F)
-# dir.create(RFDATDIR,recursive=T, showWarnings = F)

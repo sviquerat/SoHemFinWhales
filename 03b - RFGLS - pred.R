@@ -1,8 +1,9 @@
 source('_SRC/SORP_settings.R')
 source(file.path(SCRIPTDIR,'RF_settings.R'))
 
-#load(PRED_GRID)
-#load(SAMPLEGRID)
+#this script creates predictions across the whole survey area which are used for visual purposes only
+#also creates validation / diagnostics for the RFGLS model
+
 load(RFGLS_MODELS)
 load(COVAR_STACKS)
 
@@ -51,10 +52,6 @@ for (quarter in names(RF_models)){
   r<-raster::setValues(empty,y_all) #and assign predicted values
   raster::writeRaster(r,file.path(FINALSPDIR,paste0('SORP_FINAL_RF_I_QUART_',quarter)),format='GTiff',overwrite = T)
   
-  #alternative method:
-  #r2<-raster::rasterFromXYZ(cbind(p_coords,y_), res=raster::res(p_raster),crs=p_raster@crs)
-  #raster::writeRaster(r2,file.path(FINALSPDIR,paste0('SORP_FINAL_RF_I_QUART_ALT_',quarter)),format='GTiff',overwrite = T)
-  
   # this is quasi validation and could be in 3a
   trees<-model$predicted_matrix #contains all 1000 tree predictions for the validation set
   validation_trees<-data.frame()
@@ -82,7 +79,6 @@ for (quarter in names(RF_models)){
 RF_validation$pretty_quart<-'Q1'
 RF_validation$pretty_quart[RF_validation$quart=='B']<-'Q2'
 RF_validation$pretty_quart[RF_validation$quart=='D']<-'Q4'
-RF_validation<-sqldf::sqldf('select quart, pretty_quart, cell_x,cell_y,I as I_obs, I_obs_scaled, I_pred, I_pred_scaled, aspect, depth, slope, tpi, DIST2_SHELF, chla, sst from RF_validation')
 
 save(RF_validation,file = RFGLS_VALIDATION_DATA,compress='gzip')
 

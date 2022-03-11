@@ -21,6 +21,10 @@ draw_circular_grid<-function(grid_radii=seq(0,1,.25),grid_angles=seq(0,360,45),g
   }
 }
 
+draw_circle<-function(radius=1,x=0,y=0,border=adjustcolor('grey',.75),col=NA,...){
+  plotrix::draw.circle(x,y,radius,border=border,col=col,...)
+}
+
 draw_snail<-function(y,type='p',col=adjustcolor('grey',.75),pch=16,color_ramp = NULL,...){
   polar<-create_snail_data(y)
   if (is.null(color_ramp)){
@@ -29,7 +33,12 @@ draw_snail<-function(y,type='p',col=adjustcolor('grey',.75),pch=16,color_ramp = 
   else{
     colors=color_ramp(nrow(polar))
   }
-  
+  if (type=='areas'){
+    polygons<-poly_area(polar$x,polar$y)
+    for (i in 1:length(polygons)){
+      polygon(polygons[[i]],col=colors[i],border=NA)
+    }
+  }
   if(type=='p'){
     for (i in 1:nrow(polar)){
       points(polar$y[i]~polar$x[i],pch=pch,col=colors[i])
@@ -64,11 +73,33 @@ create_snail_data<-function(y){
   return(df)
 }
 
-polar_area<-function(x,y, comp_radius=1){
-  area<-pracma::polyarea(x,y)
-  area_comp<-pi*comp_radius
+get_radius<-function(x1,y1,x0=0,y0=0){
+  return(sqrt(abs(x1-x0)^2+abs(y1-y0)^2))
+}
+
+poly_area<-function(x,y){
+  polygons<-list()
+  for (i in 2:length(x)){
+    poly<-list()
+    poly$x<-c(0,x[i-1],x[i],0)
+    poly$y<-c(0,y[i-1],y[i],0)
+    polygons[[i]]<-poly
+  }
+  return(polygons)
+}
+
+polar_area<-function(x,y, comp_radius=1,method='length'){
+  if (method=='length'){
+    #this is equivalent to average of value
+    area<-sum(get_radius(x,y))
+    area_comp<-length(x)*comp_radius
+  }
+  if(method=='area'){
+    area<-pracma::polyarea(x,y)
+    area_comp<-pi*comp_radius
+  }
   return(
-    list(ratio=area/area_comp,area_data=area, area_comparison=area_comp, comparison_radius = comp_radius)
+    list(ratio=area/area_comp,area_data=area, area_comparison=area_comp, comparison_radius = comp_radius,method=method)
   )
 }
 

@@ -1,6 +1,5 @@
 source(file.path(getwd(),'_SRC','SORP_settings.R'))
 source(file.path(SCRIPTDIR,'MAXENT_settings.R'))
-#library(ggplot2)
 
 load(file = MAXENT_MODELS)
 load(file = FINAL_COVARS)

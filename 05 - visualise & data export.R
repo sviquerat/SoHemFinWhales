@@ -5,9 +5,6 @@ SUPPDIR<-file.path(PUBDIR,'SUPP')
 dir.create(SUPPDIR, showWarnings = F)
 
 #### copy files from various locations into pubdir ####
-file<-file.path(FINALDIR,'SORP_AREA_ESTIMATES.xlsx')
-file.copy(file, file.path(PUBDIR,paste0('TABLE_6_',basename(file))),overwrite = T)
-
 file<-file.path(FINALDIR,'SORP_MODEL_DEFINITION.xlsx')
 file.copy(file, file.path(PUBDIR,paste0('TABLE_4_',basename(file))),overwrite = T)
 
@@ -21,6 +18,17 @@ df<-cbind(df, mx_summary[,cols])
 names(df)<-gsub('_pretty','',names(df))
 #combine with model definitions
 openxlsx::write.xlsx(df, file.path(PUBDIR,paste0('TABLE_5_',basename(file))))
+
+file<-file.path(FINALDIR,'SORP_RFGLS_VALIDATION.xlsx')
+rfgls_summary<-openxlsx::read.xlsx(file)
+df<-rfgls_summary[,c(1:3,5)]
+df$accuracy<-paste0(round(rfgls_summary$accuracy_q50,4), '\n(',round(rfgls_summary$accuracy_q05,4),' - ',round(rfgls_summary$accuracy_q95,4),')')
+df<-df[order(df$quarter),]
+df$IQR<-round(rfgls_summary$accuracy_q95-rfgls_summary$accuracy_q05,4)
+openxlsx::write.xlsx(df, file.path(PUBDIR,paste0('TABLE_6_',basename(file))))
+
+file<-file.path(FINALDIR,'SORP_AREA_ESTIMATES.xlsx')
+file.copy(file, file.path(PUBDIR,paste0('TABLE_7_',basename(file))),overwrite = T)
 
 file<-file.path(MAXENTDIR,'SORP_MAXENT_MODEL_RESULTS_REPLICATES.xlsx')
 file.copy(file, file.path(SUPPDIR,paste0('SUPP_',basename(file))),overwrite = T)
@@ -58,9 +66,54 @@ for (f in files){
 #pub figures
 files<-list.files(MAXENTMODELGFX, '.*_DIAGS_EVAL_.*.png', full.names = T)
 for (f in files){
-  if(grepl('.*_AUC.png',basename(f))){file.copy(f, file.path(PUBDIR,paste0('FIG_5_',basename(f))),overwrite = T)}
-  if(grepl('.*_kappa.png',basename(f))){file.copy(f, file.path(PUBDIR,paste0('FIG_6_',basename(f))),overwrite = T)}
+  if(grepl('.*_AUC.png',basename(f))){file.copy(f, file.path(PUBDIR,paste0('FIG_4_',basename(f))),overwrite = T)}
+  if(grepl('.*_kappa.png',basename(f))){file.copy(f, file.path(PUBDIR,paste0('FIG_5_',basename(f))),overwrite = T)}
 }
+
+files<-list.files(path = MAXENTGFX, pattern='MAXENT_FINAL_DIAGS_.*.png', full.names = T)
+i<-0
+for (f in files){
+  i<-i+1
+  sub<-letters[i]
+  file.copy(f, file.path(PUBDIR,paste0('FIG_6',sub,'_',basename(f))),overwrite = T)
+}
+
+#### redo violin plots for maxent diags ####
+file<-file.path(MAXENTDIR,'SORP_MAXENT_MODEL_RESULTS_REPLICATES.xlsx')
+def<-openxlsx::read.xlsx(file.path(FINALDIR,'SORP_MODEL_DEFINITION.xlsx'))
+mx_res<-openxlsx::read.xlsx(file)
+target_vars<-c('AUC','kappa')
+df<-mx_res[,c(1:4,which(names(mx_res) %in% target_vars))]
+
+fnames<-sqldf::sqldf('select * from df as a left join def as b on a.modelName = b.modelName;')
+df$fancy_model<-paste0(df$modelName, ' - ', fnames$def)
+df$quart<-as.character(pub_quarter_names[df$quart])
+
+p<-ggplot(data=df,aes(x=modelName,y=AUC, fill=fancy_model))
+p<-p+geom_violin()+MAINTHEME
+p<-p+facet_wrap(.~quart)+labs(fill=NULL)
+p<-p+theme(axis.text.x = element_text(angle = 90),legend.position = 'right',axis.title.x=element_blank())
+
+png(file.path(PUBDIR,'FIG_4_AUC.png'),12000,5000,res=600)
+print(p)
+dev.off()
+
+png(file.path(PUBDIR,'FIG_4_AUC_small.png'),6000,2500,res=300)
+print(p)
+dev.off()
+
+p<-ggplot(data=df,aes(x=modelName,y=kappa, fill=fancy_model))
+p<-p+geom_violin()+MAINTHEME
+p<-p+facet_wrap(.~quart)+labs(fill=NULL)
+p<-p+theme(axis.text.x = element_text(angle = 90),legend.position = 'right',axis.title.x=element_blank())
+
+png(file.path(PUBDIR,'FIG_5_KAPPA.png'),12000,5000,res=600)
+print(p)
+dev.off()
+
+png(file.path(PUBDIR,'FIG_5_KAPPA_small.png'),6000,2500,res=300)
+print(p)
+dev.off()
 
 #### provider summary table (table 1) ####
 load(PRESENCEDATA)
@@ -136,10 +189,13 @@ p<-ggplot2::ggplot(data=df,aes(x=Quarter,y=value,fill=group))
 p<-p+geom_col(position=position_dodge())+scale_fill_brewer(palette="Set2")+MAINTHEME
 p<-p+labs(x='',y='',fill='')
 
-png(file.path(PUBDIR,'FIG_4_SORP_SUMMARY_MONTHS.png'),8000,6000,res=600)
+png(file.path(PUBDIR,'FIG_2_SORP_SUMMARY_MONTHS.png'),8000,6000,res=600)
 print(p)
 dev.off()
 
+png(file.path(PUBDIR,'FIG_2_SORP_SUMMARY_MONTHS_small.png'),4000,3000,res=300)
+print(p)
+dev.off()
 
 #### summary by year (Fig 3) ####
 records_quart_year<-sqldf::sqldf('select year as Year, sum(G) as G, sum(I) as I,0 as gs,
@@ -151,7 +207,6 @@ total<-data.frame(Year='Total',G=sum(records_quart_year$G),I=sum(records_quart_y
                   Cpresence=sum(records_quart_year$Cpresence),Cabsence=sum(records_quart_year$Cabsence))
 records_quart_year<-rbind(records_quart_year,total)
 records_quart_year$gs<-round(records_quart_year$I/records_quart_year$G,2)
-
 
 df<-records_quart_year[1:(nrow(records_quart_year)-1),]
 df<-reshape2::melt(df,id.vars=c('Year'),measure.vars=c('G','I', 'Cpresence','Cabsence'))
@@ -166,11 +221,13 @@ p<-ggplot2::ggplot(data=df,aes(x=Year,y=value,fill=group))
 p<-p+geom_col(position=position_dodge())+scale_fill_brewer(palette="Set2")+MAINTHEME
 p<-p+labs(x='',y='',fill='')+theme(axis.text.x = element_text(angle=90))
 
-png(file.path(PUBDIR,'FIG_3_SORP_SUMMARY_YEAR.png'),12000,6000,res=600)
+png(file.path(PUBDIR,'FIG_1_SORP_SUMMARY_YEAR.png'),12000,6000,res=600)
 print(p)
 dev.off()
 
-#RF DIAGS?
+png(file.path(PUBDIR,'FIG_1_SORP_SUMMARY_YEAR_small.png'),6000,3000,res=300)
+print(p)
+dev.off()
 
 #### NEXT #####
 

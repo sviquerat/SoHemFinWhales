@@ -154,5 +154,3 @@ MAXENT_results_merger<-function(results, static_cols=1:6){
   }
   return(combined)
 }
-
-#source(file.path(SCRIPTFUNCDIR,'separation_plots.R'))
