@@ -5,6 +5,7 @@ SUPPDIR<-file.path(PUBDIR,'SUPP')
 dir.create(SUPPDIR, showWarnings = F)
 
 #### copy files from various locations into pubdir ####
+#### tables ####
 file<-file.path(FINALDIR,'SORP_MODEL_DEFINITION.xlsx')
 file.copy(file, file.path(PUBDIR,paste0('TABLE_4_',basename(file))),overwrite = T)
 
@@ -17,6 +18,15 @@ cols<-grep('.*_pretty',names(mx_summary))
 df<-cbind(df, mx_summary[,cols])
 names(df)<-gsub('_pretty','',names(df))
 #combine with model definitions
+#add line break before ci
+df$modelName<-gsub('model','m',df$modelName)
+killcols<-which(names(df) %in% c('replicate','sensitivity_threshold'))
+df<-df[,-killcols]
+pub_names<-c('quart','id',	'Cpresence',	'Cabsences',	'cor',	'AUC',	'κmax',	'ssens',	'omission',	'prevalence',	'sspec',	'sensitivity')
+names(df)<-pub_names
+openxlsx::write.xlsx(df, file.path(SUPPDIR,paste0('SUPP_SORP_MAXENT_FINAL_MODEL_RESULTS_SUMMARY.xlsx')))
+pub_names<-c('quart','id',	'Cpresence',	'Cabsences',	'AUC',	'κmax')
+df<-df[,which(names(df) %in% pub_names)]
 openxlsx::write.xlsx(df, file.path(PUBDIR,paste0('TABLE_5_',basename(file))))
 
 file<-file.path(FINALDIR,'SORP_RFGLS_VALIDATION.xlsx')
@@ -31,7 +41,15 @@ file<-file.path(FINALDIR,'SORP_AREA_ESTIMATES.xlsx')
 file.copy(file, file.path(PUBDIR,paste0('TABLE_7_',basename(file))),overwrite = T)
 
 file<-file.path(MAXENTDIR,'SORP_MAXENT_MODEL_RESULTS_REPLICATES.xlsx')
-file.copy(file, file.path(SUPPDIR,paste0('SUPP_',basename(file))),overwrite = T)
+mx_summary<-openxlsx::read.xlsx(file)
+df<-mx_summary
+df$quart<-as.character(pub_quarter_names[df$quart])
+df$modelName<-gsub('model','m',df$modelName)
+killcols<-which(names(df) %in% c('id','sensitivity_threshold'))
+df<-df[,-killcols]
+pub_names<-c('quart','replicate','id',	'Cpresence',	'Cabsences',	'cor',	'AUC',	'κmax',	'ssens',	'omission',	'prevalence',	'sspec',	'sensitivity')
+names(df)<-pub_names
+openxlsx::write.xlsx(df, file.path(SUPPDIR,paste0('SUPP_',basename(file))),overwrite = T)
 
 file<-file.path(MAXENTDIR,'SORP_MAXENT_MODEL_RESULTS_SUMMARY.xlsx')
 mx_summary<-openxlsx::read.xlsx(file)
@@ -40,7 +58,24 @@ df$quart<-as.character(pub_quarter_names[df$quart])
 cols<-grep('.*_pretty',names(mx_summary))
 df<-cbind(df, mx_summary[,cols])
 names(df)<-gsub('_pretty','',names(df))
+df$modelName<-gsub('model','m',df$modelName)
+killcols<-which(names(df) %in% c('replicate','id','sensitivity_threshold'))
+df<-df[,-killcols]
+pub_names<-c('quart','id',	'Cpresence',	'Cabsences',	'cor',	'AUC',	'κmax',	'ssens',	'omission',	'prevalence',	'sspec',	'sensitivity')
+names(df)<-pub_names
 openxlsx::write.xlsx(df, file.path(SUPPDIR,'SUPP_SORP_MAXENT_MODEL_RESULTS_SUMMARY.xlsx'))
+
+
+#### figures ####
+files<-list.files(EXP_GFX_DIR, '._selected_SORP_spearman_rho_sq.png', full.names = T)
+for (f in files){
+  file.copy(f, file.path(SUPPDIR,paste0('SUPP_',basename(f))),overwrite = T)
+}
+
+files<-list.files(EXP_GFX_DIR, '.*SORP_pairs.*.png', full.names = T)
+for (f in files){
+  file.copy(f, file.path(SUPPDIR,paste0('SUPP_',basename(f))),overwrite = T)
+}
 
 files<-list.files(MAXENTGFX, '.*_FINAL_DIAGS.*.png', full.names = T)
 for (f in files){
@@ -63,7 +98,6 @@ for (f in files){
   file.copy(f, file.path(SUPPDIR,paste0('SUPP_',basename(f))),overwrite = T)
 }
 
-#pub figures
 files<-list.files(MAXENTMODELGFX, '.*_DIAGS_EVAL_.*.png', full.names = T)
 for (f in files){
   if(grepl('.*_AUC.png',basename(f))){file.copy(f, file.path(PUBDIR,paste0('FIG_4_',basename(f))),overwrite = T)}
@@ -114,6 +148,12 @@ dev.off()
 png(file.path(PUBDIR,'FIG_5_KAPPA_small.png'),6000,2500,res=300)
 print(p)
 dev.off()
+
+#### snail plots ####
+files<-list.files(FINALGFXDIR, 'SORP_RFGLS_SNAIL_ACCURACY_QUART_..png', full.names = T)
+for (f in files){
+  file.copy(f, file.path(SUPPDIR,paste0('SUPP_',basename(f))),overwrite = T)
+}
 
 #### provider summary table (table 1) ####
 load(PRESENCEDATA)
@@ -256,185 +296,3 @@ for (q in unique(sampleData$quart)){
 }
 
 #### data hulls done
-
-ABS<-subset(predGrid,CellID %in% absData$CellID)
-PRES<-subset(predGrid,CellID %in% presData$CellID)
-q_months<-month.abb[quarts[[QUART]]]
-subtitle<-paste0(QUART,' - ',paste0(q_months,collapse=' / '))
-
-}
-
-
-p<-ggplot(data=summary_areas,aes(group=pretty_quart,y=N,x=pretty_quart,fill=pretty_quart))
-p<-p+geom_bar(stat='identity') + theme(legend.position='none')
-p<-p+labs(x='',y = 'adjusted total abundance of fin whales')
-p<-p+facet_wrap(.~area, scales='free')
-p
-
-p<-ggplot(data=summary_areas,aes(group=pretty_quart,y=N,x=area,fill=area))
-p<-p+geom_bar(stat='identity') + theme(legend.position='none')
-p<-p+labs(x='',y = 'adjusted total abundance of fin whales')
-p<-p+facet_wrap(.~pretty_quart, scales='free')
-p
-
-
-
-covars<-c(static_covCols,env_covCols)
-
-df<-area_results[,c('adj_I','area','pretty_quart', covars)]
-df<-df[complete.cases(df),]
-df$ID<-rownames(df)
-m_df<-reshape2::melt(df, measure.vars=covars,id.vars='ID')
-m_df<-sqldf::sqldf('select * from m_df as a left join df as b on a.ID=b.ID;')
-m_df<-m_df[,1:6]
-[m_df$area=='Elephant Island',]
-
-for (aoi in unique(m_df$area)){
-  p<-ggplot(data=m_df[m_df$area==aoi,], aes(x=value, y=adj_I, color=variable))
-  p<-p+geom_point(color='grey',alpha=.2)
-  p<-p+geom_smooth()
-  p<-p+facet_grid(pretty_quart~area+variable,scales='free')
-  p<-p+labs(x='covar value', y='adjusted abundance estimate') + theme(legend.position = 'none')
-  p<-p+MAINTHEME 
-  
-  png(file.path(FINALGFXDIR,paste0('SORP_RESPONSE_PREDICTED_ABUNDANCE_',aoi,'.png')),3000,3000,res=300)
-  print(p)
-  graphics.off()
-}
-
-png(file.path(FINALGFXDIR,paste0('SORP_RESPONSE_PREDICTED_PRESENCE_THD_',var,'_',q,'.png')),3000,3000,res=300)
-print(h)
-graphics.off()
-
-}
-
-
-pair_names<-c('pretty_quart','I_obs','I_pred','aspect', 'depth', 'slope', 'tpi', 'DIST2_SHELF', 'chla', 'sst')
-png(file.path(FINALGFXDIR,'SORP_RFGLS_VALIDATION_PAIRS.png'),5000,5000,res=300)
-p<-GGally::ggpairs(RF_validation[,pair_names], aes(colour = pretty_quart, alpha = 0.2))
-p<-p+MAINTHEME
-print(p)
-graphics.off()
-
-
-source('_SRC/SORP_settings.R')
-
-SURVEYAREA<-rgdal::readOGR(files_SURVEYAREA)
-SURVEYAREA<-sp::spTransform(SURVEYAREA,ANT_POL_STEREO)
-WORLD<-rgdal::readOGR(files_WORLD)
-WORLD<-sp::spTransform(WORLD,ANT_POL_STEREO)
-load(PRED_GRID)
-
-# resp plots - into visualise?
-y<-Q50_masked@data@values
-pframe<-data.frame(p_hsm=y)
-for (var in names(predictors)){
-  p_map<-predictors[[var]]*thd_50
-  pframe[[var]]<-p_map@data@values
-}
-p<-GGally::ggpairs(pframe, aes(alpha = 0.2))
-p
-
-for (QUART in c('A','B','C','D')){
-  print(QUART)
-  
-  load(file = file.path(RESDATDIR,paste0('SORP_FINAL_predictions_quart_',QUART,'.RData')))
-  
-  predData$predictions$I_soft_Q50<-round(predData$predictions$I_soft_Q50,0) #maybe this helps with the high sum of abundances
-  predData$validation$I_soft_Q50<-round(predData$validation$I_soft_Q50,0) #maybe this helps with the high sum of abundances
-  
-  pData<-subset(predData$predictions,!is.na(predData$predictions$aboveThreshold))
-  sData<-subset(predData$validation,!is.na(predData$validation$aboveThreshold))
-  sData<-subset(sData,!is.na(sData$x))
-  
-  png(file.path(DIAGDIR,paste0('SORP_FINAL_diagnostics_GOF_',QUART,'.png')),3400,3400,res=300)
-  par(mfrow=c(2,1))
-  plot(I_soft_Q50~I,data=sData,pch=16,col=adjustcolor('blue',alpha=.2),xlim=c(0,max(c(I_soft_Q50,I))),ylim=c(0,max(c(I_soft_Q50,I))),ann=F)
-  m<-lowess(sData$I_soft_Q50~sData$I)
-  lines(m$y~m$x,col='red')
-  abline(a=0,b=1,col='green',lwd=2)
-  legend('topleft',legend=paste0("Pearson's correlation factor: ",round(cor(sData$I_soft_Q50,sData$I),4)))
-  title(main='predicted versus oberved number of Fin whales',xlab=expression(I[observed]),ylab=fancyRESPONSES$I,sub=QUART)
-  b<-hist(pData$aboveThreshold,plot=F)
-  dens<-density(pData$aboveThreshold,from=0,to=1)
-  dens$y_<-dens$y/max(dens$y)*max(b$counts)
-  plot(b$counts~b$mids,xlim=c(0,1),col=adjustcolor('blue',.4),ann=F,type='n')
-  grid()
-  plot(b,xlim=c(0,1),col=adjustcolor('blue',.4),ann=F,add=T)
-  lines(dens$y_~dens$x,col='red',lwd=2)
-  box()
-  title(main=paste0('Probability of Fin Whale occurence being non-random '),sub=QUART,xlab=fancyRESPONSES$aboveThreshold,ylab='counts')
-  graphics.off()
-  
-  png(file.path(DIAGDIR,paste0('SORP_FINAL_diagnostics_OccurenceProb_',QUART,'.png')),3400,3400,res=300)
-  img<-akima::interp(x=sData$I_soft_Q50,y=sData$I,z=sData$aboveThreshold*100,duplicate='median')
-  filled.contour(img,key.title=title(sub=fancyRESPONSES$aboveThreshold))
-  title(main='Probability of fin whale occurence > 50 %',xlab=expression(I[observed]),ylab=fancyRESPONSES$I,sub=QUART)
-  graphics.off()
-  
-  presData<-subset(sampleData,dataType == 'presence' & month %in% quarts[[QUART]])
-  absData<-subset(sampleData,dataType == 'absence' & month %in% quarts[[QUART]])
-  
-  vertices<-subset(sampleData,month %in% quarts[[QUART]])
-  vertices<-vertices[chull(vertices$y,vertices$x),]
-  LL<-sp::SpatialPoints(cbind(vertices$x,vertices$y),ANT_POL_STEREO)
-  HULL<-points2polygons(LL,name=QUART)
-  SMALLAREA<-rgeos::gDifference(SURVEYAREA,HULL)
-  SMALLAREA<-sp::SpatialPolygonsDataFrame(SMALLAREA,data=data.frame(name=QUART))
-  rgdal::writeOGR(HULL,dsn=file.path(FINALSPDIR,paste0('CHULL_',QUART,'.gpkg')), layer = paste0('CHULL ',QUART), driver='GPKG', overwrite_layer = T)
-  rgdal::writeOGR(SMALLAREA,dsn=file.path(FINALSPDIR,paste0('MASK_',QUART,'.gpkg')), layer = paste0('MASK ',QUART), driver='GPKG', overwrite_layer = T)
-  
-  ABS<-subset(predGrid,CellID %in% absData$CellID)
-  PRES<-subset(predGrid,CellID %in% presData$CellID)
-  q_months<-month.abb[quarts[[QUART]]]
-  subtitle<-paste0(QUART,' - ',paste0(q_months,collapse=' / '))
-  
-  for (resp in RESPONSES){
-    print(resp)
-    fileName<-paste0('SORP_FINAL_',resp,'_',QUART)
-    pos<-which(names(pData) %in% c('x','y',resp))
-    pg<-pData[,pos]
-    pR<-pg[complete.cases(pg),]
-    
-    #pR<-p[,c('x','y',resp)]
-    coordinates(pR) <- ~ x + y
-    raster::crs(pR) <- ANT_POL_STEREO
-    r<-raster::raster(raster::extent(pR),res = RASTERRES)
-    r<-raster::rasterize(pR,r,field=resp)
-    raster::crs(r) <- ANT_POL_STEREO
-    raster::writeRaster(r,file.path(FINALSPDIR,fileName),format='GTiff',overwrite=T)
-    
-    #create subsets of rasters
-    
-    png(file.path(FINALGFXDIR,paste0(fileName,'.png')),2400,2400,res=300)
-    plot(r,main=fancyRESPONSES[[resp]],sub=subtitle,xlab='',ylab='',col = rev(resp.colours[[resp]](25)))
-    plot(HULL,add=T,lty=2,lwd=3,border='white')
-    plot(SMALLAREA,add=T,col=adjustcolor('grey',alpha=.5),border=NA)
-    ignore<-polyColourPlot(WORLD,'SOV_A3',add=T)
-    points(y~x,absData,col=adjustcolor('black',alpha=.4),pch=16,cex=.4)
-    points(y~x,presData,col=adjustcolor('blue',alpha=.4),pch=4,cex=1)
-    graphics.off()
-    
-    png(file.path(DETAILDIR,paste0(fileName,'_DETAIL.png')),2400,2400,res=300)
-    par(mfrow=c(1,2))
-    plot(r,main=fancyRESPONSES[[resp]],sub=paste0(subtitle,'\nSouth Georgia'),xlab='',ylab='',col = rev(resp.colours[[resp]](25)),xlim=EXTENT_SG[1:2],ylim=EXTENT_SG[3:4])
-    ignore<-polyColourPlot(WORLD,'SOV_A3',add=T)
-    plot(ABS,col=adjustcolor('black',alpha=.3),border=NA,add=T)
-    plot(PRES,col=adjustcolor('blue',alpha=.3),border =NA,add=T)
-    
-    plot(r,main=fancyRESPONSES[[resp]],sub=paste0(subtitle,'\nWAP'),xlab='',ylab='',col = rev(resp.colours[[resp]](25)),xlim=EXTENT_WAP_ISLAND[1:2],ylim=EXTENT_WAP_ISLAND[3:4])
-    ignore<-polyColourPlot(WORLD,'SOV_A3',add=T)
-    plot(ABS,col=adjustcolor('black',alpha=.2),border=NA,add=T)
-    plot(PRES,col=adjustcolor('blue',alpha=.4),border =NA,add=T)
-    graphics.off()
-  }
-}
-
-# refer to all the scripts and re run the plots with pub settings!
-
-
-png(file.path(EXP_GFX_DIR,'SORP_pairs.png'),4200,4200,res=150)
-p<-GGally::ggpairs(sample_grid[,c('quarter',analysis_cols)], aes(colour = quarter, alpha = 0.2))
-p<-p+MAINTHEME
-print(p)
-graphics.off()

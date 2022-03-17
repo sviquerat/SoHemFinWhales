@@ -5,7 +5,6 @@ load(file = MAXENT_MODELS)
 load(file = FINAL_COVARS)
 
 #### model evaluation
-#https://github.com/shandongfx/workshop_maxent_R/blob/master/code/Appendix1_case_study.md
 results<-MAXENT_summary
 
 summary<-subset(results,replicate %in% c('Quartile 25', 'Quartile 75','averaged'))
@@ -94,5 +93,3 @@ for (q in unique(df$quart)){
 scree_data[,2:8]<-round(scree_data[,2:8],4)
 scree_data<-scree_data[order(scree_data$quarter),]
 openxlsx::write.xlsx(scree_data,file.path(MAXENTDIR,'SORP_MAXENT_MODEL_SCREE.xlsx'))
-
-#pc_data?

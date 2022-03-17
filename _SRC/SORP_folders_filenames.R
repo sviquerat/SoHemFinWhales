@@ -24,9 +24,6 @@ FINALSPDIR<-file.path(FINALDIR,'SPATIAL')
 FINAL_SP_AREA_DIR<-file.path(FINALSPDIR,'AREAS')
 FINALDATADIR<-file.path(FINALDIR,'DATA')
 
-DIAGDIR<-file.path(FINALGFXDIR,'DIAGNOSTICS')
-DETAILDIR<-file.path(FINALGFXDIR,'DETAIL')
-
 # dynamic
 EXPDIR<-file.path(RESDIR,'_EXPLORATION')
 EXP_GFX_DIR<-file.path(EXPDIR,'GFX')
@@ -43,8 +40,11 @@ dir.create(FINALSPDIR,recursive = T, showWarnings = F)
 dir.create(FINALDATADIR,recursive = T, showWarnings = F)
 dir.create(FINALAREADIR, showWarnings = F)
 dir.create(FINAL_SP_AREA_DIR, showWarnings = F)
-dir.create(DIAGDIR, showWarnings = F)
-dir.create(DETAILDIR, showWarnings = F)
+
+#DIAGDIR<-file.path(FINALGFXDIR,'DIAGNOSTICS')
+#DETAILDIR<-file.path(FINALGFXDIR,'DETAIL')
+#dir.create(DIAGDIR, showWarnings = F)
+#dir.create(DETAILDIR, showWarnings = F)
 
 #### Static Data Filenames ####
 files_TARGETAREAS <- file.path(SHPDIR,'TARGET_AREAS_EPSG9354.gpkg')

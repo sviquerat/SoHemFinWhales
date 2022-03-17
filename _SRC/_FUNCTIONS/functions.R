@@ -1,3 +1,12 @@
+hard_max<-function(x){
+  x <- x[!is.na(x)]
+  x<-as.numeric(x)
+  tb<-table(x)
+  succ<-tb['1']
+  fail<-tb['0']
+  return (tb['1']>tb['0'] )
+}
+
 standardError<-function(vector, ...){
   return(sd(vector, na.rm=T) / sqrt(length(vector[!is.na(vector)])))
 }

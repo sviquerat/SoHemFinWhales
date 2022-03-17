@@ -10,15 +10,6 @@ SURVEYAREA<-sp::spTransform(SURVEYAREA,IBCSO)
 #https://github.com/shandongfx/workshop_maxent_R/blob/master/code/Appendix1_case_study.md
 #Liu, C., M. White & G. Newell, 2011. Measuring and comparing the accuracy of species distribution models with presence-absence data. Ecography 34: 232-243.
 
-hard_max<-function(x){
-  x <- x[!is.na(x)]
-  x<-as.numeric(x)
-  tb<-table(x)
-  succ<-tb['1']
-  fail<-tb['0']
-  return (tb['1']>tb['0'] )
-}
-
 thd_sd<-function(x){
   x <- x[!is.na(x)]
   n <-length(x) #number of trials
