@@ -52,6 +52,7 @@ files_TARGETAREAS <- file.path(SHPDIR,'TARGET_AREAS_EPSG9354.gpkg')
 files_IBCSO<-list.files(DEPTHDIR,pattern='IBCSO.*.tif$',full.names = T) # IBCSO 2 depth raster up to 50°S
 files_SURVEYAREA<-file.path(MERGEDDIR,'SHAPES','SORP_BOUNDARY_100K_BUFFER.gpkg')
 files_WORLD <- file.path(SHPDIR,'STATIC','ne_50m_admin_0_countries.gpkg')
+file_maxent_exe <- file.path(DATDIR,'MAXENT','maxent.jar')
 
 #### final data filenames ####
 PRED_GRID<-file.path(RESDATDIR,'SORP_predGrid.RData')

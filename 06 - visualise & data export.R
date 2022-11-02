@@ -1,3 +1,4 @@
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path)) #only works in rstudio / posit
 source('_SRC/SORP_settings.R')
 
 PUBDIR<-file.path(FINALDIR,'PUB')

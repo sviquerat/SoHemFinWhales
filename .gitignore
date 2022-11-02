@@ -1,6 +1,7 @@
 .Rhistory
 *.aux.xml
 *.docx
+_*.R
 
 DATA/*
 RESULTS/*
@@ -10,3 +11,4 @@ RESULTS/_FINAL/*
 RESULTS/_FINAL/SPATIAL/
 
 !DATA/SOURCES/_MERGED_DATA/
+test.jar
