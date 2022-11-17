@@ -15,7 +15,8 @@ for (quarter in unique(RF_validation$quart)){
   
   png(file.path(FINALGFXDIR,paste0('SORP_RFGLS_SNAIL_ACCURACY_QUART_',quarter,'.png')),6000,3000,res=300)
   par(mfrow=c(1,2))
-  snailplot(val$accuracy, type='n', grid_radii = seq(0,max(val$accuracy),.5))
+  #snailplot(val$accuracy, type='n', grid_radii = seq(0,max(val$accuracy),.5), limit=5.9)
+  snailplot(val$accuracy, type='n', grid_radii = seq(0,5,1), limit=6)
   draw_snail(val$accuracy,type='p')
   draw_snail(val$accuracy,type='areas',color_ramp = rainbow)
   draw_snail(val$accuracy,type='o')

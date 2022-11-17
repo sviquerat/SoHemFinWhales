@@ -103,9 +103,20 @@ polar_area<-function(x,y, comp_radius=1,method='length'){
   )
 }
 
-snailplot<-function(y,type='poly',scale_y=1,grid_radii=quantile(y,na.rm=T)){
+snailplot<-function(y,type='poly',scale_y=1,grid_radii=NULL,limits=NULL){
   par(pty="s")
-  range<-max(y,na.rm=T)*scale_y
+  
+  if (is.null(limits)){
+    limits<-max(y,na.rm=T)
+  }
+  
+  if (is.null(grid_radii)){
+    grid_radii = quantile(y,na.rm=T)
+  }
+  
+  #range<-max(y,na.rm=T)*scale_y
+  #range<-limits*scale_y
+  range<-limits
   plot(1,1,type='n',ann=F, xlim=c(-range,range),ylim=c(-range,range))
   draw_circular_grid(grid_radii=grid_radii)
   draw_snail(y, type=type)

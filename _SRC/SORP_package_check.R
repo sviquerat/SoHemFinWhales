@@ -2,7 +2,7 @@
 
 .requiredPackages<-c('ape','devtools','dismo','rJava', "tree","randomForest", "fmsb","sp","raster","rgdal",
                     'pROC','pracma','separationplot','reshape','ggplot2','MASS','rasterVis',"ggnewscale","GGally",
-					"ggpubr","gridExtra","reshape2","ggridges","dplyr","scales","Hmisc","RandomForestsGLS")
+					"ggpubr","gridExtra","reshape2","ggridges","dplyr","scales","Hmisc","RandomForestsGLS", 'plotrix')
 
 for (pkg in .requiredPackages){
   if (! (pkg %in% installed.packages()) ) {
